@@ -72,21 +72,11 @@ $(document).ready(function () {
 
     function fetchMovies(page) {
         let movieQuery = $("#movieQuery").val();
-        let movieQueryURL =
-            "https://api.themoviedb.org/3/search/movie?query=" +
-            movieQuery +
-            "&language=en-US&page=" +
-            page +
-            "&api_key=" +
-            TMDB_api_key;
+        let movieQueryURL = `/api/search-movies?query=${movieQuery}&page=${page}`;
 
         $.ajax({
-            async: true,
-            crossDomain: true,
             type: "GET",
             url: movieQueryURL,
-            contentType: false,
-            processData: false,
             success: function (response) {
                 let items = response.results;
                 totalMoviePages = response.total_pages;
@@ -106,7 +96,7 @@ $(document).ready(function () {
                             `<div class="tbl-posters"><img src="${verticalPosterPath}" alt="${item.title}" class="tbl-vertical-poster"><img src="${horizontalPosterPath}" alt="${item.title}" class="tbl-horizontal-poster"></div>`,
                             `<div class="result-tbl-title"> <span class="content-title mb-2"> ${item.title} </span> <span class="content-title"> ${item.release_date} </span></div>`,
                             `<div class="itemDescription result-tbl-description w-100"> ${item.overview} </div>`,
-                            `<a href="javascript:;" class="btn btn-primary importContentData" rel="${item.id}"> ${localization.importData} </a>`,
+                            `<a href="javascript:;" class="btn btn-primary importContentData" rel="${item.id}"> Import </a>`,
                         ]);
                     });
 
@@ -243,23 +233,12 @@ $(document).ready(function () {
     }
 
     function fetchSeries(page) {
-
         let seriesQuery = $("#seriesQuery").val();
-        let seriesQueryURL =
-            "https://api.themoviedb.org/3/search/tv?query=" +
-            seriesQuery +
-            "&language=en-US&page=" +
-            page +
-            "&api_key=" +
-            TMDB_api_key;
+        let seriesQueryURL = `/api/search-series?query=${seriesQuery}&page=${page}`;
 
         $.ajax({
-            async: true,
-            crossDomain: true,
             type: "GET",
             url: seriesQueryURL,
-            contentType: false,
-            processData: false,
             success: function (response) {
                 let items = response.results;
                 totalSeriesPages = response.total_pages;
@@ -279,7 +258,7 @@ $(document).ready(function () {
                             `<div class="tbl-posters"><img src="${verticalPosterPath}" alt="${item.name}" class="tbl-vertical-poster"><img src="${horizontalPosterPath}" alt="${item.name}" class="tbl-horizontal-poster"></div>`,
                             `<div class="result-tbl-title"> <span class="content-title mb-2"> ${item.name} </span> <span class="content-title"> ${item.first_air_date} </span></div>`,
                             `<div class="itemDescription result-tbl-description w-100"> ${item.overview} </div>`,
-                            `<a href="javascript:;" class="btn btn-primary importSeriesContentData" rel="${item.id}"> ${localization.importData} </a>`,
+                            `<a href="javascript:;" class="btn btn-primary importSeriesContentData" rel="${item.id}"> Import </a>`,
                         ]);
                     });
 
@@ -373,11 +352,12 @@ $(document).ready(function () {
         var contentID = $(this).attr("rel");
 
         $("#content_type").val(2).selectric("refresh");
-        let seriesContentDetailURL =
-            "https://api.themoviedb.org/3/tv/" +
-            contentID +
-            "?api_key=" +
-            TMDB_api_key;
+        // let seriesContentDetailURL =
+        //     "https://api.themoviedb.org/3/tv/" +
+        //     contentID +
+        //     "?api_key=" +
+        //     TMDB_api_key;
+        var seriesContentDetailURL = `/api/content-details?id=${contentID}&type=tv`;
 
         $.ajax({
             url: seriesContentDetailURL,
@@ -520,11 +500,12 @@ $(document).ready(function () {
         var contentID = $(this).attr("rel");
 
         $("#content_type").val(1).selectric("refresh");
-        var contentDetailURL =
-            "https://api.themoviedb.org/3/movie/" +
-            contentID +
-            "?api_key=" +
-            `${TMDB_api_key}`;
+        // var contentDetailURL =
+        //     "https://api.themoviedb.org/3/movie/" +
+        //     contentID +
+        //     "?api_key=" +
+        //     `${TMDB_api_key}`;
+        var contentDetailURL = `/api/content-details?id=${contentID}&type=movie`;
 
         $.ajax({
             url: contentDetailURL,

@@ -10,7 +10,8 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MediaGalleryController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\TVController;  
+use App\Http\Controllers\TMDBController;
+use App\Http\Controllers\TVController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -173,3 +174,13 @@ Route::post('mediaGalleryList', [MediaGalleryController::class, 'mediaGalleryLis
 Route::post('addMedia', [MediaGalleryController::class, 'addMedia'])->middleware(['checkLogin'])->name('addMedia');
 Route::post('updateMedia', [MediaGalleryController::class, 'updateMedia'])->middleware(['checkLogin'])->name('updateMedia');
 Route::post('deleteMedia', [MediaGalleryController::class, 'deleteMedia'])->middleware(['checkLogin'])->name('deleteMedia');
+
+
+// Route for fetching movies
+Route::get('/api/search-movies', [TMDBController::class, 'searchMovies']);
+
+// Route for fetching series
+Route::get('/api/search-series', [TMDBController::class, 'searchSeries']);
+
+// Route for fetching content details
+Route::get('/api/content-details', [TMDBController::class, 'getContentDetails']);
