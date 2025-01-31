@@ -104,10 +104,10 @@ $(document).ready(function () {
                         destroy: true,
                         data: data,
                         columns: [
-                            { title: "Poster" },
-                            { title: "Title" },
-                            { title: "Overview" },
-                            { title: "Action" },
+                            {title: "Poster"},
+                            {title: "Title"},
+                            {title: "Overview"},
+                            {title: "Action"},
                         ],
                         paging: false,
                         pageLength: 10,
@@ -266,10 +266,10 @@ $(document).ready(function () {
                         destroy: true,
                         data: data,
                         columns: [
-                            { title: "Poster" },
-                            { title: "Title" },
-                            { title: "Overview" },
-                            { title: "Action" },
+                            {title: "Poster"},
+                            {title: "Title"},
+                            {title: "Overview"},
+                            {title: "Action"},
                         ],
                         paging: false,
                         pageLength: 10,
@@ -380,6 +380,7 @@ $(document).ready(function () {
                     horizontalPosterPath
                 );
 
+                $("#addNewContentFormSeries").attr('rel', response.content_id);
                 $("#series_vertical_poster_url").val(verticalPosterPath);
                 $("#series_horizontal_poster_url").val(horizontalPosterPath);
 
@@ -404,7 +405,7 @@ $(document).ready(function () {
                     $.ajax({
                         type: "POST",
                         url: `${domainUrl}addGenre`,
-                        data: { genres: genreNamesString },
+                        data: {genres: genreNamesString},
                         success: function (genreResponse) {
                             if (genreResponse.status) {
                                 $("#series_set_selectGenre").empty();
@@ -530,6 +531,7 @@ $(document).ready(function () {
                     : "";
 
                 $("#set_title").val(response.title);
+                $("#set_trailer_url").val(response.trailer_url);
                 $("#set_description").val(response.overview);
                 $("#set_release_year").val(releaseYear);
 
@@ -551,7 +553,7 @@ $(document).ready(function () {
                     $.ajax({
                         type: "POST",
                         url: `${domainUrl}addGenre`,
-                        data: { genres: genreNamesString },
+                        data: {genres: genreNamesString},
                         success: function (genreResponse) {
                             if (genreResponse.status) {
                                 $("#set_selectGenre").empty();
@@ -641,7 +643,7 @@ $(document).ready(function () {
 
     $(document).on("submit", "#addNewContentForm", function (e) {
         e.preventDefault();
-       checkUserType(function (e) {
+        checkUserType(function (e) {
             let formData = new FormData($("#addNewContentForm")[0]);
 
             let verticalPosterSrc = $("#set_vertical_poster").attr("src");
@@ -685,6 +687,13 @@ $(document).ready(function () {
         e.preventDefault();
         checkUserType(function (e) {
             let formData = new FormData($("#addNewContentFormSeries")[0]);
+
+            let contentId = $("#addNewContentFormSeries").attr(
+                "rel"
+            );
+            if (contentId) {
+                formData.append("content_id", contentId);
+            }
 
             let verticalPosterSrc = $("#series_set_vertical_poster").attr(
                 "src"

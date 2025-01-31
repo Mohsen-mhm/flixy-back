@@ -52,6 +52,23 @@ class TMDBController extends Controller
             'language' => 'en-US',
         ]);
 
-        return response()->json($response->json(), $response->status());
+        $status = $response->status();
+        $response = $response->json();
+        $response['content_id'] = $id;
+
+        if ($endpoint == 'movie') {
+            $trailerResponse = Http::get("https://api.themoviedb.org/3/{$endpoint}/{$id}/videos", [
+                'api_key' => $apiKey,
+                'language' => 'en-US',
+            ])->json();
+            if (array_key_exists('results', $trailerResponse)) {
+                if (count($trailerResponse['results'])) {
+                    $trailer = collect($trailerResponse['results'])->first();
+                    $response['trailer_url'] = $trailer['key'];
+                }
+            }
+        }
+
+        return response()->json($response, $status);
     }
 }

@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Google\Client;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 use function Psy\debug;
@@ -94,17 +95,17 @@ class GlobalFunction extends Model
                 Storage::disk('digitalocean')->delete($fileNameDO);
             }
         } catch (\Exception $e) {
-            
+
         }
-        
+
         try {
             if (Storage::disk('s3')->exists($fileNameAWS)) {
                 Storage::disk('s3')->delete($fileNameAWS);
             }
         } catch (\Exception $e) {
-            
+
         }
-        
+
     }
 
     public static function saveFileAndGivePath($file)

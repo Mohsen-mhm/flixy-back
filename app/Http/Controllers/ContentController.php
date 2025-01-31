@@ -19,6 +19,7 @@ use App\Subtitle;
 use App\TopContent;
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 
 class ContentController extends Controller
@@ -53,7 +54,7 @@ class ContentController extends Controller
             $userWatchListContent = Content::where('is_show', Constants::showContent)->whereIn('id', $userWatchListContentsArray)->limit(5)->get();
         }
 
-        $topContents = TopContent::whereHas('content',  function ($query){
+        $topContents = TopContent::whereHas('content', function ($query) {
             $query->where('is_show', Constants::showContent);
         })->with('content')->orderBy('content_index', 'ASC')->get();
 
@@ -62,17 +63,16 @@ class ContentController extends Controller
 
         foreach ($genres as $genre) {
             $genreContent = Content::where('is_show', Constants::showContent)
-                                    ->whereRaw('FIND_IN_SET(?, genre_ids)', [$genre->id])
-                                    ->inRandomOrder()
-                                    ->limit(env('HOME_PAGE_GENRE_CONTENTS_LIMIT'))
-                                    ->get();
+                ->whereRaw('FIND_IN_SET(?, genre_ids)', [$genre->id])
+                ->inRandomOrder()
+                ->limit(env('HOME_PAGE_GENRE_CONTENTS_LIMIT'))
+                ->get();
 
             if ($genreContent->isNotEmpty()) {
                 $genre->contents = $genreContent;
                 $genreContents[] = $genre;
             }
         }
-
 
 
         return response()->json([
@@ -156,10 +156,10 @@ class ContentController extends Controller
         $limit = $request->limit;
 
         $genreContents = Content::where('is_show', Constants::showContent)
-                                ->whereRaw('FIND_IN_SET(?, genre_ids)', [$genre->id])
-                                ->skip($start)
-                                ->take($limit)
-                                ->get();
+            ->whereRaw('FIND_IN_SET(?, genre_ids)', [$genre->id])
+            ->skip($start)
+            ->take($limit)
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -218,16 +218,16 @@ class ContentController extends Controller
 
         if ($content->type == Constants::series) {
             $seasons = Season::with([
-                                    'episodes', 
-                                    'episodes.sources',
-                                    'episodes.subtitles'
-                                    ])
-                                    ->where('content_id', $request->content_id)
-                                    ->get();
-                                    
+                'episodes',
+                'episodes.sources',
+                'episodes.subtitles'
+            ])
+                ->where('content_id', $request->content_id)
+                ->get();
+
             $contentCast = ContentCast::with('actor')->where('content_id', $request->content_id)->get();
             $content->contentCast = $contentCast;
-            
+
             $content->seasons = $seasons;
         }
 
@@ -238,17 +238,17 @@ class ContentController extends Controller
                 $query->whereRaw('FIND_IN_SET(?, genre_ids)', [$genreId]);
             }
         })
-        ->where('id', '!=', $content->id)
-        ->inRandomOrder()
-        ->limit(env('MORE_LIKE_RANDOM_LIST_COUNT'))
-        ->get();
-
-        if ($moreLikeThis->isEmpty()) {
-            $moreLikeThis = Content::where('is_show', Constants::showContent)->where('type', $content->type)
             ->where('id', '!=', $content->id)
             ->inRandomOrder()
             ->limit(env('MORE_LIKE_RANDOM_LIST_COUNT'))
             ->get();
+
+        if ($moreLikeThis->isEmpty()) {
+            $moreLikeThis = Content::where('is_show', Constants::showContent)->where('type', $content->type)
+                ->where('id', '!=', $content->id)
+                ->inRandomOrder()
+                ->limit(env('MORE_LIKE_RANDOM_LIST_COUNT'))
+                ->get();
         }
 
         $content->more_like_this = $moreLikeThis;
@@ -281,22 +281,22 @@ class ContentController extends Controller
         if ($request->has('type')) {
             $query->where('type', $request->type);
         }
-        
+
         if ($request->has('genre_id')) {
             $query->whereRaw('FIND_IN_SET(?, genre_ids)', [$request->genre_id]);
         }
-        
+
         if ($request->has('language_id')) {
             $query->where('language_id', $request->language_id);
         }
-        
+
         if ($request->has('keyword')) {
             $query->where('title', 'LIKE', '%' . $request->keyword . '%');
         }
 
         $contents = $query->offset($request->start)
-                            ->limit($request->limit)
-                            ->get();
+            ->limit($request->limit)
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -305,7 +305,7 @@ class ContentController extends Controller
         ]);
 
     }
-    
+
     function increaseContentView(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -451,28 +451,28 @@ class ContentController extends Controller
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('title', 'LIKE', "%{$searchValue}%")
-                ->orWhere('description', 'LIKE', "%{$searchValue}%")
-                ->orWhere('ratings', 'LIKE', "%{$searchValue}%")
-                ->orWhere('release_year', 'LIKE', "%{$searchValue}%")
-                ->orWhereHas('language', function ($q) use ($searchValue) {
-                    $q->where('title', 'LIKE', "%{$searchValue}%");
-                });
+                    ->orWhere('description', 'LIKE', "%{$searchValue}%")
+                    ->orWhere('ratings', 'LIKE', "%{$searchValue}%")
+                    ->orWhere('release_year', 'LIKE', "%{$searchValue}%")
+                    ->orWhereHas('language', function ($q) use ($searchValue) {
+                        $q->where('title', 'LIKE', "%{$searchValue}%");
+                    });
             });
         }
 
         $totalFiltered = $query->count();
 
         $result = $query->orderBy($orderColumn, $orderDir)
-                        ->offset($start)
-                        ->limit($limit)
-                        ->get();
+            ->offset($start)
+            ->limit($limit)
+            ->get();
 
         $data = $result->map(function ($item) {
 
-        $verticalImageUrl = $item->vertical_poster ?  $item->vertical_poster : './assets/img/default.png';
-        $horizontalImageUrl = $item->horizontal_poster ?  $item->horizontal_poster : './assets/img/default.png';
+            $verticalImageUrl = $item->vertical_poster ? $item->vertical_poster : './assets/img/default.png';
+            $horizontalImageUrl = $item->horizontal_poster ? $item->horizontal_poster : './assets/img/default.png';
 
-        $horizontalPoster = "<img data-fancybox src='{$verticalImageUrl}' alt='image' class='object-cover img-fluid vertical_poster_tbl img-border border-radius'>
+            $horizontalPoster = "<img data-fancybox src='{$verticalImageUrl}' alt='image' class='object-cover img-fluid vertical_poster_tbl img-border border-radius'>
                             <img data-fancybox src='{$horizontalImageUrl}' alt='image' class='object-cover img-fluid horizontal_poster_tbl img-border border-radius'>";
 
             $featured = $item->is_featured == Constants::featured
@@ -519,17 +519,17 @@ class ContentController extends Controller
             $movieDetail = "<a href='contentList/{$item->id}' class='btn btn-info me-2 shadow-none text-white' style='white-space: nowrap;'>" . __('movieDetail') . "</a>";
 
             $edit = "<a rel='{$item->id}'
-                    data-type='{$item->type}' 
+                    data-type='{$item->type}'
                     data-title='{$item->title}'
-                    data-description='{$item->description}' 
+                    data-description='{$item->description}'
                     data-duration='{$item->duration}'
-                    data-release_year='{$item->release_year}' 
-                    data-ratings='{$item->ratings}' 
-                    data-language_id='{$item->language_id}' 
-                    data-genre_ids='{$item->genre_ids}' 
-                    data-trailer_url='{$item->trailer_url}'  
-                    data-vposter='{$item->vertical_poster}' 
-                    data-hposter='{$item->horizontal_poster}' 
+                    data-release_year='{$item->release_year}'
+                    data-ratings='{$item->ratings}'
+                    data-language_id='{$item->language_id}'
+                    data-genre_ids='{$item->genre_ids}'
+                    data-trailer_url='{$item->trailer_url}'
+                    data-vposter='{$item->vertical_poster}'
+                    data-hposter='{$item->horizontal_poster}'
                     class='me-2 btn btn-success px-3 text-white edit'>" . __('edit') . "</a>";
 
             $delete = "<a href='#' class='btn btn-danger px-3 text-white delete' rel='{$item->id}'>" . __('delete') . "</a>";
@@ -643,10 +643,54 @@ class ContentController extends Controller
 
         $content->save();
 
+        if ($request->has('content_id')) {
+            $this->saveSeasonEpisodes($content->id, $request->input('content_id'));
+        }
+
         return response()->json([
             'status' => true,
             'message' => 'Content Added Successfully',
             'data' => $content,
+        ]);
+    }
+
+    public function saveSeasonEpisodes($contentId, $tmdbContentId)
+    {
+        $seasonsResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}", [
+            'api_key' => env('TMDB_API_KEY'),
+            'language' => 'en-US',
+        ])->json();
+        if (array_key_exists('seasons', $seasonsResponse)) {
+            foreach ($seasonsResponse['seasons'] as $season) {
+                $newSeason = new Season();
+                $newSeason->content_id = $contentId;
+                $newSeason->title = $season['name'];
+                $newSeason->save();
+
+                $episodesResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}/season/{$season['season_number']}", [
+                    'api_key' => env('TMDB_API_KEY'),
+                    'language' => 'en-US',
+                ])->json();
+                if (array_key_exists('episodes', $episodesResponse)) {
+                    foreach ($episodesResponse['episodes'] as $episode) {
+                        $newEpisode = new Episode();
+                        $newEpisode->season_id = $newSeason->id;
+                        $newEpisode->number = $episode['episode_number'];
+                        $newEpisode->title = $episode['name'];
+                        $newEpisode->description = $episode['overview'];
+                        $newEpisode->duration = 0;
+                        $newEpisode->save();
+                    }
+                }
+            }
+        }
+    }
+
+    public function getSeriesSeasons($tmdbContentId)
+    {
+        $response = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}", [
+            'api_key' => env('TMDB_API_KEY'),
+            'language' => 'en-US',
         ]);
     }
 
@@ -670,19 +714,19 @@ class ContentController extends Controller
 
         if ($request->hasFile('vertical_poster')) {
             GlobalFunction::deleteFile($content->vertical_poster);
-            
+
             $verticalPoster = $request->file('vertical_poster');
             $verticalPosterPath = GlobalFunction::saveFileAndGivePath($verticalPoster);
             $content->vertical_poster = $verticalPosterPath;
         }
         if ($request->hasFile('horizontal_poster')) {
             GlobalFunction::deleteFile($content->horizontal_poster);
-            
+
             $horizontalPoster = $request->file('horizontal_poster');
             $horizontalPosterPath = GlobalFunction::saveFileAndGivePath($horizontalPoster);
             $content->horizontal_poster = $horizontalPosterPath;
         }
-        
+
         $content->save();
 
         return response()->json([
@@ -810,7 +854,7 @@ class ContentController extends Controller
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue, $typeMappings) {
                 $q->where('title', 'LIKE', "%{$searchValue}%")
-                ->orWhere('quality', 'LIKE', "%{$searchValue}%");
+                    ->orWhere('quality', 'LIKE', "%{$searchValue}%");
                 if (array_key_exists($searchValue, $typeMappings)) {
                     $q->orWhere('type', $typeMappings[$searchValue]);
                 }
@@ -820,16 +864,16 @@ class ContentController extends Controller
         $totalFiltered = $query->count();
 
         $result = $query->orderBy($orderColumn, $orderDir)
-                        ->offset($start)
-                        ->limit($limit)
-                        ->get();
+            ->offset($start)
+            ->limit($limit)
+            ->get();
 
         $data = $result->map(function ($item) use ($typeMappings) {
-            
+
             if ($item->type == Constants::FileType) {
-                $source = '<a href="javascript:;" 
-                            rel="' . $item->id . '"  
-                            data-source_url="' . $item->media->file . '" 
+                $source = '<a href="javascript:;"
+                            rel="' . $item->id . '"
+                            data-source_url="' . $item->media->file . '"
                             class="me-2 btn btn-primary px-4 text-white source_file_video">' . __('videoPreview') . ' </a>';
             } elseif ($item->type == Constants::Youtube) {
                 $sourceUrl = 'https://youtu.be/' . $item->source;
@@ -839,13 +883,13 @@ class ContentController extends Controller
             }
 
             $edit = '<a rel="' . $item->id . '"
-                        data-title="' . $item->title . '" 
-                        data-quality="' . $item->quality . '" 
-                        data-size="' . $item->size . '" 
-                        data-download="' . $item->is_download . '" 
+                        data-title="' . $item->title . '"
+                        data-quality="' . $item->quality . '"
+                        data-size="' . $item->size . '"
+                        data-download="' . $item->is_download . '"
                         data-accesstype="' . $item->access_type . '"
-                        data-type="' . $item->type . '" 
-                        data-source="' . $item->source . '" 
+                        data-type="' . $item->type . '"
+                        data-source="' . $item->source . '"
                         class="me-2 btn btn-success px-3 text-white edit">' . __('edit') . '</a>';
 
             $delete = '<a href="#" class="btn btn-danger px-3 text-white delete" rel=' . $item->id . '>' . __('delete') . '</a>';
@@ -992,8 +1036,8 @@ class ContentController extends Controller
             $characterName = $item->character_name;
 
             $edit = "<a rel='{$item->id}'
-                    data-actor_id='{$item->actor->id}' 
-                    data-character_name='{$item->character_name}' 
+                    data-actor_id='{$item->actor->id}'
+                    data-character_name='{$item->character_name}'
                     class='me-2 btn btn-success px-3 text-white edit'>" . __('edit') . "</a>";
 
             $delete = "<a href='#' class='btn btn-danger px-3 text-white delete' rel='{$item->id}'>" . __('delete') . "</a>";
@@ -1025,7 +1069,7 @@ class ContentController extends Controller
         $contentCast->character_name = $request->character_name;
 
         $contentCast->save();
-        
+
         return response()->json([
             'status' => true,
             'message' => 'Movie Cast Added Successfully',
@@ -1153,7 +1197,7 @@ class ContentController extends Controller
                 'message' => 'Something Went Wrong',
             ]);
         }
-         
+
         GlobalFunction::deleteFile($subtitle->file);
 
         $subtitle->delete();
@@ -1183,12 +1227,12 @@ class ContentController extends Controller
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('title', 'LIKE', "%{$searchValue}%")
-                ->orWhere('description', 'LIKE', "%{$searchValue}%")
-                ->orWhere('ratings', 'LIKE', "%{$searchValue}%")
-                ->orWhere('release_year', 'LIKE', "%{$searchValue}%")
-                ->orWhereHas('language', function ($q) use ($searchValue) {
-                    $q->where('title', 'LIKE', "%{$searchValue}%");
-                });
+                    ->orWhere('description', 'LIKE', "%{$searchValue}%")
+                    ->orWhere('ratings', 'LIKE', "%{$searchValue}%")
+                    ->orWhere('release_year', 'LIKE', "%{$searchValue}%")
+                    ->orWhereHas('language', function ($q) use ($searchValue) {
+                        $q->where('title', 'LIKE', "%{$searchValue}%");
+                    });
             });
         }
 
@@ -1200,7 +1244,7 @@ class ContentController extends Controller
             ->get();
 
         $data = $result->map(function ($item) {
-            
+
             $horizontalPoster = "<img data-fancybox src='{$item->vertical_poster}' alt='image' class='object-cover img-fluid vertical_poster_tbl img-border border-radius'>
                             <img data-fancybox src='{$item->horizontal_poster}' alt='image' class='object-cover img-fluid horizontal_poster_tbl img-border border-radius'>";
 
@@ -1249,17 +1293,17 @@ class ContentController extends Controller
             $title = "<span class='itemDescription'> $item->title </span>";
 
             $edit = "<a rel='{$item->id}'
-                data-type='{$item->type}' 
+                data-type='{$item->type}'
                 data-title='{$item->title}'
-                data-description='{$item->description}' 
+                data-description='{$item->description}'
                 data-duration='{$item->duration}'
-                data-release_year='{$item->release_year}' 
-                data-ratings='{$item->ratings}' 
-                data-language_id='{$item->language_id}' 
-                data-genre_ids='{$item->genre_ids}' 
-                data-trailer_url='{$item->trailer_url}'  
-                data-vposter='{$item->vertical_poster}' 
-                data-hposter='{$item->horizontal_poster}' 
+                data-release_year='{$item->release_year}'
+                data-ratings='{$item->ratings}'
+                data-language_id='{$item->language_id}'
+                data-genre_ids='{$item->genre_ids}'
+                data-trailer_url='{$item->trailer_url}'
+                data-vposter='{$item->vertical_poster}'
+                data-hposter='{$item->horizontal_poster}'
                 class='me-2 btn btn-success px-3 text-white edit'>" . __('edit') . "</a>";
 
             $delete = "<a href='#' class='btn btn-danger px-3 text-white delete' rel='{$item->id}'>" . __('delete') . "</a>";
@@ -1348,7 +1392,7 @@ class ContentController extends Controller
             'data' => $season,
         ]);
     }
-    
+
     public function deleteSeason(Request $request)
     {
         $season = Season::find($request->season_id);
@@ -1361,7 +1405,7 @@ class ContentController extends Controller
         }
 
         foreach ($season->episodes as $episode) {
-            
+
             foreach ($episode->sources as $source) {
                 if ($source->type == Constants::FileType) {
                     GlobalFunction::deleteFile($source->source);
@@ -1369,13 +1413,13 @@ class ContentController extends Controller
                 $source->delete();
             }
 
-          
+
             foreach ($episode->subtitles as $subtitle) {
                 GlobalFunction::deleteFile($subtitle->file);
                 $subtitle->delete();
             }
 
-           
+
             GlobalFunction::deleteFile($episode->thumbnail);
             $episode->delete();
         }
@@ -1405,7 +1449,7 @@ class ContentController extends Controller
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('title', 'LIKE', "%{$searchValue}%")
-                ->orWhere('description', 'LIKE', "%{$searchValue}%");
+                    ->orWhere('description', 'LIKE', "%{$searchValue}%");
             });
         }
 
@@ -1424,9 +1468,9 @@ class ContentController extends Controller
                     data-number="' . $item->number . '"
                     data-thumbnail="' . $item->thumbnail . '"
                     data-title="' . $item->title . '"
-                    data-description="' . $item->description . '" 
-                    data-duration="' . $item->duration . '" 
-                    data-access_type="' . $item->access_type . '" 
+                    data-description="' . $item->description . '"
+                    data-duration="' . $item->duration . '"
+                    data-access_type="' . $item->access_type . '"
                     class="me-2 btn btn-success px-3 text-white edit">' . __('edit') . '</a>';
             $delete = '<a href="#" class="btn btn-danger px-3 text-white delete" rel="' . $item->id . '">' . __('delete') . '</a>';
             $action = '<div class="text-end action">' . $episodeDetail . $edit . $delete . '</div>';
@@ -1463,7 +1507,7 @@ class ContentController extends Controller
         $episode->title = $request->title;
         $episode->description = $request->description;
         $episode->duration = $request->duration;
-        
+
         $episode->save();
 
         return response()->json([
@@ -1513,21 +1557,21 @@ class ContentController extends Controller
                 'message' => 'Something Went Wrong',
             ]);
         }
- 
+
         GlobalFunction::deleteFile($episode->thumbnail);
- 
+
         foreach ($episode->sources as $episodeSource) {
             GlobalFunction::deleteFile($episodeSource->source);
             $episodeSource->delete();
         }
- 
+
         foreach ($episode->subtitles as $episodeSubtitle) {
             GlobalFunction::deleteFile($episodeSubtitle->file);
             $episodeSubtitle->delete();
         }
-        
+
         $season = Season::where('id', $episode->season_id)->first();
- 
+
         $episode->delete();
 
 
@@ -1586,7 +1630,7 @@ class ContentController extends Controller
                 ->get();
         } else {
             $search = $request->input('search.value');
-            $result =  EpisodeSource::where('episode_id', $request->episode_id)
+            $result = EpisodeSource::where('episode_id', $request->episode_id)
                 ->offset($start)
                 ->limit($limit)
                 ->orderBy($order, $dir)
@@ -1599,11 +1643,10 @@ class ContentController extends Controller
         foreach ($result as $item) {
 
 
-            
             if ($item->type == Constants::FileType) {
-                $source = '<a href="javascript:;" 
-                    rel="' . $item->id . '"  
-                    data-source_url="' . $item->source . '" 
+                $source = '<a href="javascript:;"
+                    rel="' . $item->id . '"
+                    data-source_url="' . $item->source . '"
                     class="me-2 btn btn-primary px-4 text-white source_file_video"> Video Preview </a>';
             } else if ($item->type == Constants::Youtube) {
                 $sourceUrl = 'https://youtu.be/' . $item->source;
@@ -1613,18 +1656,18 @@ class ContentController extends Controller
             }
 
             $edit = '<a rel="' . $item->id . '"
-                        data-title="' . $item->title . '" 
-                        data-quality="' . $item->quality . '" 
-                        data-size="' . $item->size . '" 
-                        data-download="' . $item->is_download . '" 
+                        data-title="' . $item->title . '"
+                        data-quality="' . $item->quality . '"
+                        data-size="' . $item->size . '"
+                        data-download="' . $item->is_download . '"
                         data-accesstype="' . $item->access_type . '"
-                        data-type="' . $item->type . '" 
-                        data-source="' . $item->source . '" 
+                        data-type="' . $item->type . '"
+                        data-source="' . $item->source . '"
                         class="me-2 btn btn-success px-3 text-white edit">' . __('edit') . '</a>';
 
             $delete = '<a href="#" class="btn btn-danger px-3 text-white delete" rel=' . $item->id . ' >' . __('delete') . '</a>';
 
-            $action = '<div class="text-end action"> '  . $edit . $delete . ' </div>';
+            $action = '<div class="text-end action"> ' . $edit . $delete . ' </div>';
 
             switch ($item->type) {
                 case 1:
@@ -1660,10 +1703,10 @@ class ContentController extends Controller
         }
 
         $json_data = array(
-            "draw"            => intval($request->input('draw')),
-            "recordsTotal"    => intval($totalData),
+            "draw" => intval($request->input('draw')),
+            "recordsTotal" => intval($totalData),
             "recordsFiltered" => $totalFiltered,
-            "data"            => $data
+            "data" => $data
         );
         echo json_encode($json_data);
         exit();
@@ -1739,7 +1782,7 @@ class ContentController extends Controller
             ]);
         }
 
-        if($episodeSource->type == Constants::FileType) {
+        if ($episodeSource->type == Constants::FileType) {
             GlobalFunction::deleteFile($episodeSource->source);
         }
         $episodeSource->delete();
@@ -1776,7 +1819,7 @@ class ContentController extends Controller
                 ->get();
         } else {
             $search = $request->input('search.value');
-            $result =  EpisodeSubtitle::where('episode_id', $request->episode_id)
+            $result = EpisodeSubtitle::where('episode_id', $request->episode_id)
                 ->offset($start)
                 ->limit($limit)
                 ->orderBy($order, $dir)
@@ -1792,7 +1835,7 @@ class ContentController extends Controller
 
             $delete = '<a href="#" class="btn btn-danger px-3 text-white delete" rel=' . $item->id . ' >' . __('delete') . '</a>';
 
-            $action = '<div class="text-end action"> '  . $download . $delete . ' </div>';
+            $action = '<div class="text-end action"> ' . $download . $delete . ' </div>';
 
             $data[] = array(
                 $item->language->title,
@@ -1801,10 +1844,10 @@ class ContentController extends Controller
         }
 
         $json_data = array(
-            "draw"            => intval($request->input('draw')),
-            "recordsTotal"    => intval($totalData),
+            "draw" => intval($request->input('draw')),
+            "recordsTotal" => intval($totalData),
             "recordsFiltered" => $totalFiltered,
-            "data"            => $data
+            "data" => $data
         );
         echo json_encode($json_data);
         exit();
@@ -1815,7 +1858,7 @@ class ContentController extends Controller
         $subtitle = new EpisodeSubtitle();
         $subtitle->episode_id = $request->episode_id;
         $subtitle->language_id = $request->language_id;
-       
+
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $filePath = GlobalFunction::saveSubtitleFileAsSrt($file);
@@ -1838,7 +1881,7 @@ class ContentController extends Controller
                 'message' => 'Something Went Wrong',
             ]);
         }
- 
+
         GlobalFunction::deleteFile($episodeSubtitle->file);
 
         $episodeSubtitle->delete();
@@ -1856,13 +1899,13 @@ class ContentController extends Controller
 
         return view('topContents', [
             'contents' => $contents,
-        ]);     
+        ]);
     }
 
     public function topContentsList()
     {
         $query = TopContent::query();
-        
+
         $query->orderBy('content_index', 'ASC');
 
 
@@ -1878,7 +1921,7 @@ class ContentController extends Controller
 
         $data = $result->map(function ($item) {
 
-            $imageUrl = $item->content->vertical_poster ?  $item->content->vertical_poster : './assets/img/profile.svg';
+            $imageUrl = $item->content->vertical_poster ? $item->content->vertical_poster : './assets/img/profile.svg';
 
             $image = "<div class='d-flex align-items-center'>
                     <img data-fancybox src='{$imageUrl}' class='object-cover img-fluid vertical_poster_tbl img-border border-radius'>
@@ -1947,7 +1990,7 @@ class ContentController extends Controller
 
     public function addToTopContent(Request $request)
     {
-        
+
         $topContents = TopContent::get();
         if ($topContents == null) {
             $topContent = new TopContent();
@@ -1958,11 +2001,8 @@ class ContentController extends Controller
                 'status' => true,
                 'message' => 'Top Content Added Successfully',
                 'data' => $topContent,
-            ]);          
-        }  
-        
-        else
-        {
+            ]);
+        } else {
             $topContent = new TopContent();
             $topContent->content_id = $request->content_id;
             $topContent->content_index = $topContents->count() + 1;
