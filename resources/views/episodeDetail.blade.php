@@ -14,7 +14,7 @@
                     <h4 class="fw-normal ms-3 mb-0"> {{ $episode->title }} </h4>
                 </div>
                 <div class="d-flex align-items-center justify-content-between">
-                    <a class='me-2 btn btn-success px-4 py-2 text-white editEpisodeModal' rel='{{$episode->id}}' data-number='{{$episode->number}}' data-thumbnail='{{ $episode->thumbnail }}' data-title='{{$episode->title}}' data-description='{{$episode->description}}' data-duration='{{$episode->duration}}' data-access_type='{{$episode->access_type}}'>{{ __('edit') }}</a>
+                    <a class='me-2 btn btn-success px-4 py-2 text-white editEpisodeModal' rel='{{$episode->id}}' data-number='{{$episode->number}}' data-thumbnail='{{ $episode->thumbnail ? $episode->thumbnail : asset("assets/img/default.png") }}' data-title='{{$episode->title}}' data-description='{{$episode->description}}' data-duration='{{$episode->duration}}' data-access_type='{{$episode->access_type}}'>{{ __('edit') }}</a>
                     <a class='btn btn-danger px-4 py-2 text-white deleteEpisode' rel='{{$episode->id}}'>{{ __('delete') }}</a>
                 </div>
             </div>

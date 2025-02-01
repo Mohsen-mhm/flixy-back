@@ -1468,12 +1468,13 @@ class ContentController extends Controller
             ->get();
 
         $data = $result->map(function ($item) {
-            $thumbnailPoster = '<span class="me-2">' . $item->number . '</span>' . '<img data-fancybox src="' . $item->thumbnail . '" alt="vertical image" class="object-cover img-fluid horizontal_poster_tbl">';
+            $thumbnail = $item->thumbnail ?: asset("assets/img/default.png");
+            $thumbnailPoster = '<span class="me-2">' . $item->number . '</span>' . '<img data-fancybox src="' . $thumbnail . '" alt="vertical image" class="object-cover img-fluid horizontal_poster_tbl">';
             $itemDescription = '<span class="itemDescription">' . $item->description . '</span>';
             $episodeDetail = '<a href="episodeDetail/' . $item->id . '" class="btn btn-info me-2 shadow-none text-white" style="white-space: nowrap;">' . __('episodeDetail') . '</a>';
             $edit = '<a rel="' . $item->id . '"
                     data-number="' . $item->number . '"
-                    data-thumbnail="' . $item->thumbnail . '"
+                    data-thumbnail="' . $thumbnail . '"
                     data-title="' . $item->title . '"
                     data-description="' . $item->description . '"
                     data-duration="' . $item->duration . '"
