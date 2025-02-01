@@ -673,11 +673,14 @@ class ContentController extends Controller
                 ])->json();
                 if (array_key_exists('episodes', $episodesResponse)) {
                     foreach ($episodesResponse['episodes'] as $episode) {
+                        $thumbnail = GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $episode['still_path']);
+
                         $newEpisode = new Episode();
                         $newEpisode->season_id = $newSeason->id;
                         $newEpisode->number = $episode['episode_number'];
                         $newEpisode->title = $episode['name'];
                         $newEpisode->description = $episode['overview'];
+                        $newEpisode->thumbnail = $thumbnail;
                         $newEpisode->duration = 0;
                         $newEpisode->save();
                     }
