@@ -609,38 +609,9 @@ class ContentController extends Controller
 
     public function addNewContent(Request $request)
     {
-        $content = new Content();
-        $content->type = $request->type;
-        $content->title = $request->title;
-        $content->description = $request->description;
-        $content->duration = $request->duration;
-        $content->release_year = $request->release_year;
-        $content->ratings = $request->ratings;
-        $content->language_id = $request->language_id;
-        $content->genre_ids = implode(',', $request->genre_ids);
-        $content->trailer_url = $request->trailer_url;
+        $content = $this->createContent($request);
 
-        // Handle vertical poster
-        if ($request->hasFile('vertical_poster')) {
-            $verticalPoster = $request->file('vertical_poster');
-            $verticalPosterPath = GlobalFunction::saveFileAndGivePath($verticalPoster);
-        } elseif ($request->has('vertical_poster_url')) {
-            $verticalPosterPath = GlobalFunction::saveImageFromUrl($request->vertical_poster_url);
-        } else {
-            $verticalPosterPath = null;
-        }
-        $content->vertical_poster = $verticalPosterPath;
-
-        // Handle horizontal poster
-        if ($request->hasFile('horizontal_poster')) {
-            $horizontalPoster = $request->file('horizontal_poster');
-            $horizontalPosterPath = GlobalFunction::saveFileAndGivePath($horizontalPoster);
-        } elseif ($request->has('horizontal_poster_url')) {
-            $horizontalPosterPath = GlobalFunction::saveImageFromUrl($request->horizontal_poster_url);
-        } else {
-            $horizontalPosterPath = null;
-        }
-        $content->horizontal_poster = $horizontalPosterPath;
+        $this->handlePosters($request, $content);
 
         $content->save();
 
@@ -655,77 +626,109 @@ class ContentController extends Controller
         ]);
     }
 
+    private function createContent(Request $request)
+    {
+        $content = new Content();
+        $content->type = $request->type;
+        $content->title = $request->title;
+        $content->description = $request->description;
+        $content->duration = $request->duration;
+        $content->release_year = $request->release_year;
+        $content->ratings = $request->ratings;
+        $content->language_id = $request->language_id;
+        $content->genre_ids = implode(',', $request->genre_ids);
+        $content->trailer_url = $request->trailer_url;
+        return $content;
+    }
+
+    private function handlePosters(Request $request, Content $content)
+    {
+        $content->vertical_poster = $this->getPosterPath($request, 'vertical_poster', 'vertical_poster_url');
+        $content->horizontal_poster = $this->getPosterPath($request, 'horizontal_poster', 'horizontal_poster_url');
+    }
+
+    private function getPosterPath(Request $request, $fileKey, $urlKey)
+    {
+        if ($request->hasFile($fileKey)) {
+            return GlobalFunction::saveFileAndGivePath($request->file($fileKey));
+        } elseif ($request->has($urlKey)) {
+            return GlobalFunction::saveImageFromUrl($request->$urlKey);
+        }
+        return null;
+    }
+
     public function saveSeasonEpisodes($contentId, $tmdbContentId)
     {
-        $seasonsResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}", [
-            'api_key' => env('TMDB_API_KEY'),
-            'language' => 'en-US',
-        ])->json();
-        if (array_key_exists('seasons', $seasonsResponse)) {
-            foreach ($seasonsResponse['seasons'] as $season) {
-                $newSeason = new Season();
-                $newSeason->content_id = $contentId;
-                $newSeason->title = $season['name'];
-                $newSeason->save();
+        $seasonsResponse = $this->fetchTmdbData("tv/{$tmdbContentId}");
 
-                $episodesResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}/season/{$season['season_number']}", [
-                    'api_key' => env('TMDB_API_KEY'),
-                    'language' => 'en-US',
-                ])->json();
-                if (array_key_exists('episodes', $episodesResponse)) {
-                    foreach ($episodesResponse['episodes'] as $episode) {
-                        if (array_key_exists('still_path', $episode) && $episode['still_path'] && !is_null($episode['still_path'])) {
-                            $thumbnail = GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $episode['still_path']);
-                        } else {
-                            $thumbnail = null;
-                        }
+        if (!isset($seasonsResponse['seasons'])) return;
 
-                        $newEpisode = new Episode();
-                        $newEpisode->season_id = $newSeason->id;
-                        $newEpisode->number = $episode['episode_number'];
-                        $newEpisode->title = $episode['name'];
-                        $newEpisode->description = $episode['overview'];
-                        $newEpisode->thumbnail = $thumbnail;
-                        $newEpisode->duration = 0;
-                        $newEpisode->save();
+        foreach ($seasonsResponse['seasons'] as $season) {
+            $newSeason = new Season();
+            $newSeason->content_id = $contentId;
+            $newSeason->title = $season['name'];
+            $newSeason->save();
 
-                        $creditsResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}/aggregate_credits", [
-                            'api_key' => env('TMDB_API_KEY'),
-                            'language' => 'en-US',
-                        ])->json();
-                        if (array_key_exists('cast', $creditsResponse)) {
-                            foreach ($creditsResponse['cast'] as $cast) {
-                                $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
-                                    'api_key' => env('TMDB_API_KEY'),
-                                    'language' => 'en-US',
-                                ])->json();
-
-                                $actor = new Actor();
-                                $actor->fullname = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
-                                $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : '';
-                                $actor->bio = array_key_exists('biography', $personResponse) ? Str::limit($personResponse['biography'], 880) : '';
-                                $actor->profile_image = array_key_exists('profile_path', $personResponse) ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
-                                $actor->save();
-                                
-                                $contentCast = new ContentCast();
-                                $contentCast->content_id = $contentId;
-                                $contentCast->actor_id = $actor->id;
-                                $contentCast->character_name = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
-                                $contentCast->save();
-                            }
-                        }
-                    }
-                }
-            }
+            $this->saveEpisodes($contentId, $newSeason->id, $tmdbContentId, $season['season_number']);
         }
     }
 
-    public function getSeriesSeasons($tmdbContentId)
+    private function saveEpisodes($contentId, $seasonId, $tmdbContentId, $seasonNumber)
     {
-        $response = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}", [
+        $episodesResponse = $this->fetchTmdbData("tv/{$tmdbContentId}/season/{$seasonNumber}");
+
+        if (!isset($episodesResponse['episodes'])) return;
+
+        foreach ($episodesResponse['episodes'] as $episode) {
+            $thumbnail = isset($episode['still_path']) && $episode['still_path']
+                ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $episode['still_path'])
+                : null;
+
+            $newEpisode = new Episode();
+            $newEpisode->season_id = $seasonId;
+            $newEpisode->number = $episode['episode_number'];
+            $newEpisode->title = $episode['name'];
+            $newEpisode->description = $episode['overview'];
+            $newEpisode->thumbnail = $thumbnail;
+            $newEpisode->duration = 0;
+            $newEpisode->save();
+
+            $this->saveCast($contentId, $tmdbContentId);
+        }
+    }
+
+    private function saveCast($contentId, $tmdbContentId)
+    {
+        $creditsResponse = $this->fetchTmdbData("tv/{$tmdbContentId}/aggregate_credits");
+
+        if (!isset($creditsResponse['cast'])) return;
+
+        foreach ($creditsResponse['cast'] as $cast) {
+            $personResponse = $this->fetchTmdbData("person/{$cast['id']}");
+
+            $actor = new Actor();
+            $actor->fullname = $personResponse['name'] ?? '';
+            $actor->dob = $personResponse['birthday'] ?? '';
+            $actor->bio = Str::limit($personResponse['biography'] ?? '', 880);
+            $actor->profile_image = isset($personResponse['profile_path'])
+                ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path'])
+                : null;
+            $actor->save();
+
+            $contentCast = new ContentCast();
+            $contentCast->content_id = $contentId;
+            $contentCast->actor_id = $actor->id;
+            $contentCast->character_name = $personResponse['name'] ?? '';
+            $contentCast->save();
+        }
+    }
+
+    private function fetchTmdbData($endpoint)
+    {
+        return Http::get("https://api.themoviedb.org/3/{$endpoint}", [
             'api_key' => env('TMDB_API_KEY'),
             'language' => 'en-US',
-        ]);
+        ])->json();
     }
 
     public function updateContent(Request $request)
