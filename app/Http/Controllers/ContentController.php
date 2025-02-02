@@ -707,7 +707,7 @@ class ContentController extends Controller
                                 if (!$actor) {
                                     $actor = new Actor();
                                     $actor->fullname = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
-                                    $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : '';
+                                    $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : 'not defined';
                                     $actor->bio = array_key_exists('biography', $personResponse) ? Str::limit($personResponse['biography'], 880) : '';
                                     $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
                                     $actor->save();
