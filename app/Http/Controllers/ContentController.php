@@ -658,11 +658,6 @@ class ContentController extends Controller
     public function saveSeasonEpisodes($contentId, $tmdbContentId)
     {
         set_time_limit(300);
-        $creditsResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}/aggregate_credits", [
-            'api_key' => env('TMDB_API_KEY'),
-            'language' => 'en-US',
-        ])->json();
-        dd($creditsResponse);
         $seasonsResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}", [
             'api_key' => env('TMDB_API_KEY'),
             'language' => 'en-US',
