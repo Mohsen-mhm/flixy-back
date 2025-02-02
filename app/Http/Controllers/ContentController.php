@@ -700,18 +700,30 @@ class ContentController extends Controller
                                     'language' => 'en-US',
                                 ])->json();
 
-                                $actor = new Actor();
-                                $actor->fullname = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
-                                $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : '';
-                                $actor->bio = array_key_exists('biography', $personResponse) ? Str::limit($personResponse['biography'], 880) : '';
-                                $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
-                                $actor->save();
+                                $actor = Actor::query()->where([
+                                    'fullname' => $personResponse['name'],
+                                    'dob' => $personResponse['birthday']
+                                ])->first();
+                                if (!$actor) {
+                                    $actor = new Actor();
+                                    $actor->fullname = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
+                                    $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : '';
+                                    $actor->bio = array_key_exists('biography', $personResponse) ? Str::limit($personResponse['biography'], 880) : '';
+                                    $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
+                                    $actor->save();
+                                }
 
-                                $contentCast = new ContentCast();
-                                $contentCast->content_id = $contentId;
-                                $contentCast->actor_id = $actor->id;
-                                $contentCast->character_name = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
-                                $contentCast->save();
+                                $contentCast = ContentCast::query()->where([
+                                    'content_id' => $contentId,
+                                    'actor_id' => $actor->id,
+                                ])->first();
+                                if (!$contentCast) {
+                                    $contentCast = new ContentCast();
+                                    $contentCast->content_id = $contentId;
+                                    $contentCast->actor_id = $actor->id;
+                                    $contentCast->character_name = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
+                                    $contentCast->save();
+                                }
                             }
                         }
                     }
