@@ -706,9 +706,9 @@ class ContentController extends Controller
                                 ])->first();
                                 if (!$actor) {
                                     $actor = new Actor();
-                                    $actor->fullname = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
-                                    $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : 'not defined';
-                                    $actor->bio = array_key_exists('biography', $personResponse) ? Str::limit($personResponse['biography'], 880) : '';
+                                    $actor->fullname = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
+                                    $actor->dob = array_key_exists('birthday', $personResponse) && $personResponse['birthday'] ? $personResponse['birthday'] : 'not defined';
+                                    $actor->bio = array_key_exists('biography', $personResponse) && $personResponse['biography'] ? Str::limit($personResponse['biography'], 880) : '';
                                     $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
                                     $actor->save();
                                 }
@@ -721,7 +721,7 @@ class ContentController extends Controller
                                     $contentCast = new ContentCast();
                                     $contentCast->content_id = $contentId;
                                     $contentCast->actor_id = $actor->id;
-                                    $contentCast->character_name = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
+                                    $contentCast->character_name = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
                                     $contentCast->save();
                                 }
                             }
