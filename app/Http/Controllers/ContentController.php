@@ -2059,7 +2059,7 @@ class ContentController extends Controller
                         $contentCast = new ContentCast();
                         $contentCast->content_id = $contentId;
                         $contentCast->actor_id = $actor->id;
-                        $contentCast->character_name = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
+                        $contentCast->character_name = array_key_exists('roles', $cast) && $cast['roles'] ? (collect(collect($cast['roles'])->first())->has('character') ? collect(collect($cast['roles'])->first())->get('character') : 'not defined') : '';
                         $contentCast->save();
                     }
                     $counter++;
