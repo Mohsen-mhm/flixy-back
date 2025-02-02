@@ -695,6 +695,7 @@ class ContentController extends Controller
                             'language' => 'en-US',
                         ])->json();
                         if (array_key_exists('cast', $creditsResponse)) {
+                            $counter = 0;
                             foreach ($creditsResponse['cast'] as $cast) {
                                 if ($cast['known_for_department'] == "Acting") {
                                     $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
@@ -725,6 +726,11 @@ class ContentController extends Controller
                                         $contentCast->actor_id = $actor->id;
                                         $contentCast->character_name = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
                                         $contentCast->save();
+                                    }
+                                    $counter++;
+
+                                    if ($counter >= 50) {
+                                        break;
                                     }
                                 }
                             }
