@@ -520,6 +520,7 @@ $(document).ready(function () {
                     ? `https://image.tmdb.org/t/p/w500${response.backdrop_path}`
                     : "assets/img/placeholder-image.png";
 
+                $("#addNewContentForm").attr('rel', response.content_id);
                 $("#set_vertical_poster").attr("src", verticalPosterPath);
                 $("#set_horizontal_poster").attr("src", horizontalPosterPath);
 
@@ -645,6 +646,13 @@ $(document).ready(function () {
         e.preventDefault();
         checkUserType(function (e) {
             let formData = new FormData($("#addNewContentForm")[0]);
+
+            let contentId = $("#addNewContentForm").attr(
+                "rel"
+            );
+            if (contentId) {
+                formData.append("movie_content_id", contentId);
+            }
 
             let verticalPosterSrc = $("#set_vertical_poster").attr("src");
             let horizontalPosterSrc = $("#set_horizontal_poster").attr("src");
