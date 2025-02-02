@@ -21,6 +21,7 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ContentController extends Controller
 {
@@ -687,6 +688,32 @@ class ContentController extends Controller
                         $newEpisode->thumbnail = $thumbnail;
                         $newEpisode->duration = 0;
                         $newEpisode->save();
+
+                        $creditsResponse = Http::get("https://api.themoviedb.org/3/tv/{$tmdbContentId}/aggregate_credits", [
+                            'api_key' => env('TMDB_API_KEY'),
+                            'language' => 'en-US',
+                        ])->json();
+                        if (array_key_exists('cast', $creditsResponse)) {
+                            foreach ($creditsResponse['cast'] as $cast) {
+                                $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
+                                    'api_key' => env('TMDB_API_KEY'),
+                                    'language' => 'en-US',
+                                ])->json();
+
+                                $actor = new Actor();
+                                $actor->fullname = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
+                                $actor->dob = array_key_exists('birthday', $personResponse) ? $personResponse['birthday'] : '';
+                                $actor->bio = array_key_exists('biography', $personResponse) ? Str::limit($personResponse['biography'], 880) : '';
+                                $actor->profile_image = array_key_exists('profile_path', $personResponse) ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
+                                $actor->save();
+                                
+                                $contentCast = new ContentCast();
+                                $contentCast->content_id = $contentId;
+                                $contentCast->actor_id = $actor->id;
+                                $contentCast->character_name = array_key_exists('name', $personResponse) ? $personResponse['name'] : '';
+                                $contentCast->save();
+                            }
+                        }
                     }
                 }
             }
