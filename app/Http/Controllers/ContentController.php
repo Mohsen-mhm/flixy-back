@@ -2034,7 +2034,7 @@ class ContentController extends Controller
         if (array_key_exists('cast', $creditsResponse)) {
             $counter = 0;
             foreach ($creditsResponse['cast'] as $cast) {
-                if ($cast['known_for_department'] == "Acting") {
+                if (in_array($cast['known_for_department'], ['Acting', 'Directing', 'Production', 'Writing'])) {
                     $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
                         'api_key' => env('TMDB_API_KEY'),
                         'language' => 'en-US',
@@ -2066,7 +2066,7 @@ class ContentController extends Controller
                     }
                     $counter++;
 
-                    if ($counter >= 20) {
+                    if ($counter >= 50) {
                         break;
                     }
                 }
@@ -2084,7 +2084,7 @@ class ContentController extends Controller
         if (array_key_exists('cast', $creditsResponse)) {
             $counter = 0;
             foreach ($creditsResponse['cast'] as $cast) {
-                if ($cast['known_for_department'] == "Acting") {
+                if (in_array($cast['known_for_department'], ['Acting', 'Directing', 'Production', 'Writing'])) {
                     $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
                         'api_key' => env('TMDB_API_KEY'),
                         'language' => 'en-US',
@@ -2116,7 +2116,7 @@ class ContentController extends Controller
                     }
                     $counter++;
 
-                    if ($counter >= 20) {
+                    if ($counter >= 50) {
                         break;
                     }
                 }
