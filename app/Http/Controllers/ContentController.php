@@ -2138,56 +2138,75 @@ class ContentController extends Controller
             'api_key' => env('TMDB_API_KEY'),
             'language' => 'en-US',
         ])->json();
+
         if (array_key_exists('crew', $creditsResponse)) {
-            $counter = 0;
+            $jobLimits = [
+                'Director' => 0,
+                'Producer' => 0,
+                'Writer' => 0,
+            ];
+
             foreach ($creditsResponse['crew'] as $cast) {
-                if (in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
-                    $job = null;
-                    if (array_key_exists('jobs', $cast) && $cast['jobs']) {
-                        if (collect(collect($cast['jobs'])->first())->has('job')) {
-                            $job = collect(collect($cast['jobs'])->first())->get('job');
-                        }
+                if (!in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
+                    continue;
+                }
+
+                $job = null;
+                if (!empty($cast['jobs'])) {
+                    $jobData = collect($cast['jobs'])->first();
+                    if (!empty($jobData['job']) && in_array($jobData['job'], ['Director', 'Producer', 'Writer'])) {
+                        $job = $jobData['job'];
                     }
-                    if (in_array($job, ['Director', 'Producer', 'Writer'])) {
-                        $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
-                            'api_key' => env('TMDB_API_KEY'),
-                            'language' => 'en-US',
-                        ])->json();
+                }
 
-                        $actor = Actor::query()->where([
-                            'fullname' => $personResponse['name'],
-                            'dob' => $personResponse['birthday']
-                        ])->first();
-                        if (!$actor) {
-                            $actor = new Actor();
-                            $actor->fullname = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
-                            $actor->dob = array_key_exists('birthday', $personResponse) && $personResponse['birthday'] ? $personResponse['birthday'] : 'not defined';
-                            $actor->bio = array_key_exists('biography', $personResponse) && $personResponse['biography'] ? Str::limit($personResponse['biography'], 880) : '';
-                            $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
-                            $actor->save();
-                        }
+                // Ensure job exists and has not exceeded the limit
+                if ($job && $jobLimits[$job] < 3) {
+                    $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
+                        'api_key' => env('TMDB_API_KEY'),
+                        'language' => 'en-US',
+                    ])->json();
 
-                        $contentCast = ContentCast::query()->where([
-                            'content_id' => $contentId,
-                            'actor_id' => $actor->id,
-                        ]);
-                        if ($job) {
-                            $contentCast->where('character_name', $job);
-                        }
-                        $contentCast = $contentCast->first();
-                        if (!$contentCast) {
-                            $contentCast = new ContentCast();
-                            $contentCast->content_id = $contentId;
-                            $contentCast->actor_id = $actor->id;
-                            $contentCast->character_name = $job ?: 'not defined';
-                            $contentCast->save();
-                        }
-                        $counter++;
+                    // Find actor in the database
+                    $actor = Actor::query()->where([
+                        'fullname' => $personResponse['name'] ?? '',
+                        'dob' => $personResponse['birthday'] ?? 'not defined',
+                    ])->first();
 
-                        if ($counter >= 30) {
-                            break;
-                        }
+                    // If actor not found, create a new one
+                    if (!$actor) {
+                        $actor = new Actor();
+                        $actor->fullname = $personResponse['name'] ?? '';
+                        $actor->dob = $personResponse['birthday'] ?? 'not defined';
+                        $actor->bio = !empty($personResponse['biography']) ? Str::limit($personResponse['biography'], 880) : '';
+                        $actor->profile_image = !empty($personResponse['profile_path'])
+                            ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path'])
+                            : null;
+                        $actor->save();
                     }
+                    
+                    // Check if ContentCast exists
+                    $contentCast = ContentCast::query()->where([
+                        'content_id' => $contentId,
+                        'actor_id' => $actor->id,
+                        'character_name' => $job,
+                    ])->first();
+
+                    // If ContentCast not found, create a new one
+                    if (!$contentCast) {
+                        $contentCast = new ContentCast();
+                        $contentCast->content_id = $contentId;
+                        $contentCast->actor_id = $actor->id;
+                        $contentCast->character_name = $job;
+                        $contentCast->save();
+                    }
+
+                    // Increase count for this job
+                    $jobLimits[$job]++;
+                }
+
+                // Stop processing when all roles reach the limit
+                if ($jobLimits['Director'] >= 3 && $jobLimits['Producer'] >= 3 && $jobLimits['Writer'] >= 3) {
+                    break;
                 }
             }
         }
