@@ -2184,7 +2184,7 @@ class ContentController extends Controller
                         }
                         $counter++;
 
-                        if ($counter >= 10) {
+                        if ($counter >= 30) {
                             break;
                         }
                     }
