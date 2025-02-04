@@ -2142,7 +2142,13 @@ class ContentController extends Controller
             $counter = 0;
             foreach ($creditsResponse['crew'] as $cast) {
                 if (in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
-                    if (in_array($cast['job'], ['Director', 'Producer', 'Writer'])) {
+                    $job = null;
+                    if (array_key_exists('jobs', $cast) && $cast['jobs']) {
+                        if (collect(collect($cast['jobs'])->first())->has('job')) {
+                            $job = collect(collect($cast['jobs'])->first())->get('job');
+                        }
+                    }
+                    if (in_array($job, ['Director', 'Producer', 'Writer'])) {
                         $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
                             'api_key' => env('TMDB_API_KEY'),
                             'language' => 'en-US',
@@ -2165,17 +2171,15 @@ class ContentController extends Controller
                             'content_id' => $contentId,
                             'actor_id' => $actor->id,
                         ]);
-                        if (array_key_exists('jobs', $cast) && $cast['jobs']) {
-                            if (collect(collect($cast['jobs'])->first())->has('job')) {
-                                $contentCast->where('character_name', collect(collect($cast['jobs'])->first())->get('job'));
-                            }
+                        if ($job) {
+                            $contentCast->where('character_name', $job);
                         }
                         $contentCast = $contentCast->first();
                         if (!$contentCast) {
                             $contentCast = new ContentCast();
                             $contentCast->content_id = $contentId;
                             $contentCast->actor_id = $actor->id;
-                            $contentCast->character_name = array_key_exists('jobs', $cast) && $cast['jobs'] ? (collect(collect($cast['jobs'])->first())->has('job') ? collect(collect($cast['jobs'])->first())->get('job') : 'not defined') : '';
+                            $contentCast->character_name = $job ?: 'not defined';
                             $contentCast->save();
                         }
                         $counter++;
