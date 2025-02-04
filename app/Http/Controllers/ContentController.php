@@ -2137,8 +2137,8 @@ class ContentController extends Controller
             'api_key' => env('TMDB_API_KEY'),
             'language' => 'en-US',
         ])->json();
-        if (array_key_exists('cast', $creditsResponse)) {
-            foreach ($creditsResponse['cast'] as $cast) {
+        if (array_key_exists('crew', $creditsResponse)) {
+            foreach ($creditsResponse['crew'] as $cast) {
                 if (in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
                     $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
                         'api_key' => env('TMDB_API_KEY'),
@@ -2181,8 +2181,8 @@ class ContentController extends Controller
             'language' => 'en-US',
         ])->json();
 
-        if (array_key_exists('cast', $creditsResponse)) {
-            foreach ($creditsResponse['cast'] as $cast) {
+        if (array_key_exists('crew', $creditsResponse)) {
+            foreach ($creditsResponse['crew'] as $cast) {
                 if (in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
                     $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
                         'api_key' => env('TMDB_API_KEY'),
