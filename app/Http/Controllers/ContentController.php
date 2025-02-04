@@ -1034,8 +1034,9 @@ class ContentController extends Controller
             ->get();
 
         $data = $result->map(function ($item) {
+            $imgSrc = $item->actor->profile_image ?: './assets/img/default.png';
             $image = "<div class='d-flex align-items-center'>
-                    <img data-fancybox src='{$item->actor->profile_image}' class='object-fit-cover border-radius' width='60px' height='60px'>
+                    <img data-fancybox src='{$imgSrc}' class='object-fit-cover border-radius' width='60px' height='60px'>
                     <span class='ms-3'>{$item->actor->fullname}</span>
                 </div>";
 
