@@ -2138,36 +2138,44 @@ class ContentController extends Controller
             'language' => 'en-US',
         ])->json();
         if (array_key_exists('crew', $creditsResponse)) {
+            $counter = 0;
             foreach ($creditsResponse['crew'] as $cast) {
                 if (in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
-                    $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
-                        'api_key' => env('TMDB_API_KEY'),
-                        'language' => 'en-US',
-                    ])->json();
+                    if (in_array($cast['job'], ['Director', 'Producer', 'Writer'])) {
+                        $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
+                            'api_key' => env('TMDB_API_KEY'),
+                            'language' => 'en-US',
+                        ])->json();
 
-                    $actor = Actor::query()->where([
-                        'fullname' => $personResponse['name'],
-                        'dob' => $personResponse['birthday']
-                    ])->first();
-                    if (!$actor) {
-                        $actor = new Actor();
-                        $actor->fullname = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
-                        $actor->dob = array_key_exists('birthday', $personResponse) && $personResponse['birthday'] ? $personResponse['birthday'] : 'not defined';
-                        $actor->bio = array_key_exists('biography', $personResponse) && $personResponse['biography'] ? Str::limit($personResponse['biography'], 880) : '';
-                        $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
-                        $actor->save();
-                    }
+                        $actor = Actor::query()->where([
+                            'fullname' => $personResponse['name'],
+                            'dob' => $personResponse['birthday']
+                        ])->first();
+                        if (!$actor) {
+                            $actor = new Actor();
+                            $actor->fullname = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
+                            $actor->dob = array_key_exists('birthday', $personResponse) && $personResponse['birthday'] ? $personResponse['birthday'] : 'not defined';
+                            $actor->bio = array_key_exists('biography', $personResponse) && $personResponse['biography'] ? Str::limit($personResponse['biography'], 880) : '';
+                            $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
+                            $actor->save();
+                        }
 
-                    $contentCast = ContentCast::query()->where([
-                        'content_id' => $contentId,
-                        'actor_id' => $actor->id,
-                    ])->first();
-                    if (!$contentCast) {
-                        $contentCast = new ContentCast();
-                        $contentCast->content_id = $contentId;
-                        $contentCast->actor_id = $actor->id;
-                        $contentCast->character_name = array_key_exists('roles', $cast) && $cast['roles'] ? (collect(collect($cast['roles'])->first())->has('character') ? collect(collect($cast['roles'])->first())->get('character') : 'not defined') : '';
-                        $contentCast->save();
+                        $contentCast = ContentCast::query()->where([
+                            'content_id' => $contentId,
+                            'actor_id' => $actor->id,
+                        ])->first();
+                        if (!$contentCast) {
+                            $contentCast = new ContentCast();
+                            $contentCast->content_id = $contentId;
+                            $contentCast->actor_id = $actor->id;
+                            $contentCast->character_name = array_key_exists('jobs', $cast) && $cast['jobs'] ? (collect(collect($cast['jobs'])->first())->has('job') ? collect(collect($cast['jobs'])->first())->get('job') : 'not defined') : '';
+                            $contentCast->save();
+                        }
+                        $counter++;
+
+                        if ($counter >= 10) {
+                            break;
+                        }
                     }
                 }
             }
@@ -2182,36 +2190,44 @@ class ContentController extends Controller
         ])->json();
 
         if (array_key_exists('crew', $creditsResponse)) {
+            $counter = 0;
             foreach ($creditsResponse['crew'] as $cast) {
                 if (in_array($cast['known_for_department'], ['Directing', 'Production', 'Writing'])) {
-                    $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
-                        'api_key' => env('TMDB_API_KEY'),
-                        'language' => 'en-US',
-                    ])->json();
+                    if (in_array($cast['job'], ['Director', 'Producer', 'Writer'])) {
+                        $personResponse = Http::get("https://api.themoviedb.org/3/person/{$cast['id']}", [
+                            'api_key' => env('TMDB_API_KEY'),
+                            'language' => 'en-US',
+                        ])->json();
 
-                    $actor = Actor::query()->where([
-                        'fullname' => $personResponse['name'],
-                        'dob' => $personResponse['birthday']
-                    ])->first();
-                    if (!$actor) {
-                        $actor = new Actor();
-                        $actor->fullname = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
-                        $actor->dob = array_key_exists('birthday', $personResponse) && $personResponse['birthday'] ? $personResponse['birthday'] : 'not defined';
-                        $actor->bio = array_key_exists('biography', $personResponse) && $personResponse['biography'] ? Str::limit($personResponse['biography'], 880) : '';
-                        $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
-                        $actor->save();
-                    }
+                        $actor = Actor::query()->where([
+                            'fullname' => $personResponse['name'],
+                            'dob' => $personResponse['birthday']
+                        ])->first();
+                        if (!$actor) {
+                            $actor = new Actor();
+                            $actor->fullname = array_key_exists('name', $personResponse) && $personResponse['name'] ? $personResponse['name'] : '';
+                            $actor->dob = array_key_exists('birthday', $personResponse) && $personResponse['birthday'] ? $personResponse['birthday'] : 'not defined';
+                            $actor->bio = array_key_exists('biography', $personResponse) && $personResponse['biography'] ? Str::limit($personResponse['biography'], 880) : '';
+                            $actor->profile_image = array_key_exists('profile_path', $personResponse) && $personResponse['profile_path'] ? GlobalFunction::saveImageFromUrl("https://image.tmdb.org/t/p/w500" . $personResponse['profile_path']) : null;
+                            $actor->save();
+                        }
 
-                    $contentCast = ContentCast::query()->where([
-                        'content_id' => $contentId,
-                        'actor_id' => $actor->id,
-                    ])->first();
-                    if (!$contentCast) {
-                        $contentCast = new ContentCast();
-                        $contentCast->content_id = $contentId;
-                        $contentCast->actor_id = $actor->id;
-                        $contentCast->character_name = array_key_exists('character', $cast) && $cast['character'] ? $cast['character'] : '';
-                        $contentCast->save();
+                        $contentCast = ContentCast::query()->where([
+                            'content_id' => $contentId,
+                            'actor_id' => $actor->id,
+                        ])->first();
+                        if (!$contentCast) {
+                            $contentCast = new ContentCast();
+                            $contentCast->content_id = $contentId;
+                            $contentCast->actor_id = $actor->id;
+                            $contentCast->character_name = array_key_exists('job', $cast) && $cast['job'] ? $cast['job'] : 'not defined';
+                            $contentCast->save();
+                        }
+                        $counter++;
+
+                        if ($counter >= 10) {
+                            break;
+                        }
                     }
                 }
             }
