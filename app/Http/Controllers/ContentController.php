@@ -470,8 +470,8 @@ class ContentController extends Controller
 
         $data = $result->map(function ($item) {
 
-            $verticalImageUrl = $item->vertical_poster ? $item->vertical_poster : './assets/img/default.png';
-            $horizontalImageUrl = $item->horizontal_poster ? $item->horizontal_poster : './assets/img/default.png';
+            $verticalImageUrl = $item->vertical_poster ? $item->vertical_poster : asset('assets/img/default.png');
+            $horizontalImageUrl = $item->horizontal_poster ? $item->horizontal_poster : asset('assets/img/default.png');
 
             $horizontalPoster = "<img data-fancybox src='{$verticalImageUrl}' alt='image' class='object-cover img-fluid vertical_poster_tbl img-border border-radius'>
                             <img data-fancybox src='{$horizontalImageUrl}' alt='image' class='object-cover img-fluid horizontal_poster_tbl img-border border-radius'>";
@@ -1929,7 +1929,7 @@ class ContentController extends Controller
 
         $data = $result->map(function ($item) {
 
-            $imageUrl = $item->content->vertical_poster ? $item->content->vertical_poster : './assets/img/profile.svg';
+            $imageUrl = $item->content->vertical_poster ? $item->content->vertical_poster : asset('assets/img/profile.svg');
 
             $image = "<div class='d-flex align-items-center'>
                     <img data-fancybox src='{$imageUrl}' class='object-cover img-fluid vertical_poster_tbl img-border border-radius'>
