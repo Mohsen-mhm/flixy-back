@@ -2163,7 +2163,13 @@ class ContentController extends Controller
                         $contentCast = ContentCast::query()->where([
                             'content_id' => $contentId,
                             'actor_id' => $actor->id,
-                        ])->first();
+                        ]);
+                        if (array_key_exists('jobs', $cast) && $cast['jobs']) {
+                            if (collect(collect($cast['jobs'])->first())->has('job')) {
+                                $contentCast->where('character_name', collect(collect($cast['jobs'])->first())->get('job'));
+                            }
+                        }
+                        $contentCast->first();
                         if (!$contentCast) {
                             $contentCast = new ContentCast();
                             $contentCast->content_id = $contentId;
@@ -2215,7 +2221,11 @@ class ContentController extends Controller
                         $contentCast = ContentCast::query()->where([
                             'content_id' => $contentId,
                             'actor_id' => $actor->id,
-                        ])->first();
+                        ]);
+                        if (array_key_exists('job', $cast) && $cast['job']) {
+                            $contentCast->where('character_name', $cast['job']);
+                        }
+                        $contentCast->first();
                         if (!$contentCast) {
                             $contentCast = new ContentCast();
                             $contentCast->content_id = $contentId;
