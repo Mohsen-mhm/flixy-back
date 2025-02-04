@@ -1,7 +1,7 @@
 $(document).ready(function () {
     $(".sideBarli").removeClass("activeLi");
     $(".contentSideA").addClass("activeLi");
-    
+
     $("#source_file").change(function () {
         var file = this.files[0];
         var progressBar = $("#progress-bar");
@@ -28,7 +28,7 @@ $(document).ready(function () {
         }
     });
 
-    
+
 
     $("#edit_source_file").change(function () {
         var file = this.files[0];
@@ -294,7 +294,7 @@ $(document).ready(function () {
             });
         });
     });
-    
+
     $("#sourceTable").on("click", ".edit", function (e) {
         e.preventDefault();
 
@@ -403,7 +403,7 @@ $(document).ready(function () {
         processing: true,
         serverSide: true,
         serverMethod: "post",
-        aaSorting: [[0, "desc"]],
+        aaSorting: [[0, "asc"]],
         language: {
             paginate: {
                 next: '<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="9 18 15 12 9 6"></polyline></svg>',
@@ -695,7 +695,7 @@ $(document).ready(function () {
         },
     });
 
-   
+
 
 
     $("#season_list").trigger("change");
