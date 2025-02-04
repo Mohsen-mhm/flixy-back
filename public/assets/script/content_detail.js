@@ -414,7 +414,7 @@ $(document).ready(function () {
         columnDefs: [
             {
                 targets: "_all",
-                orderable: false,
+                orderable: true,
             },
         ],
         ajax: {
