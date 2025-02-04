@@ -2169,7 +2169,7 @@ class ContentController extends Controller
                                 $contentCast->where('character_name', collect(collect($cast['jobs'])->first())->get('job'));
                             }
                         }
-                        $contentCast->first();
+                        $contentCast = $contentCast->first();
                         if (!$contentCast) {
                             $contentCast = new ContentCast();
                             $contentCast->content_id = $contentId;
@@ -2225,7 +2225,7 @@ class ContentController extends Controller
                         if (array_key_exists('job', $cast) && $cast['job']) {
                             $contentCast->where('character_name', $cast['job']);
                         }
-                        $contentCast->first();
+                        $contentCast = $contentCast->first();
                         if (!$contentCast) {
                             $contentCast = new ContentCast();
                             $contentCast->content_id = $contentId;
